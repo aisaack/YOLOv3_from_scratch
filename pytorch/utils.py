@@ -1,42 +1,48 @@
 import torch
 import numpy as np
 
-def iou(boxes_preds, boxes_labels, mode = 'mid_point'):
+def iou(boxes1, boxes2):
+    intersection = torch.min(boxes1[..., 0], boxes2[..., 0]) * torch.min(boxes1[..., 1], boxes2[..., 1]) 
+    union = boxes1[..., 0] * boxes1[..., 1] + boxes2[..., 0] * boxes2[..., 1]
+    return intersection / union
 
-    if mode == 'mid_point':
-        box1_x1 = boxes_preds[..., 0:1] - boxes_preds[..., 2:3] / 2
-        box1_y1 = boxes_preds[..., 1:2] - boxes_preds[..., 3:4] / 2
-        box1_x2 = boxes_preds[..., 0:1] + boxes_preds[..., 2:3] / 2
-        box1_y2 = boxes_preds[..., 1:2] + boxes_preds[..., 3:4] / 2
 
-        box2_x1 = boxes_labels[..., 0:1] - boxes_labels[..., 2:3] / 2
-        box2_y1 = boxes_labels[..., 1:2] - boxes_labels[..., 3:4] / 2
-        box2_x2 = boxes_labels[..., 0:1] + boxes_labels[..., 2:3] / 2
-        box2_y2 = boxes_labels[..., 1:2] + boxes_labels[..., 3:4] / 2
+# def iou(boxes_preds, boxes_labels, mode = 'wh'):
+# 
+#     if mode == 'xy':
+#         box1_x1 = boxes_preds[..., 0:1] - boxes_preds[..., 2:3] / 2
+#         box1_y1 = boxes_preds[..., 1:2] - boxes_preds[..., 3:4] / 2
+#         box1_x2 = boxes_preds[..., 0:1] + boxes_preds[..., 2:3] / 2
+#         box1_y2 = boxes_preds[..., 1:2] + boxes_preds[..., 3:4] / 2
+# 
+#         box2_x1 = boxes_labels[..., 0:1] - boxes_labels[..., 2:3] / 2
+#         box2_y1 = boxes_labels[..., 1:2] - boxes_labels[..., 3:4] / 2
+#         box2_x2 = boxes_labels[..., 0:1] + boxes_labels[..., 2:3] / 2
+#         box2_y2 = boxes_labels[..., 1:2] + boxes_labels[..., 3:4] / 2
+# 
+#     elif mode == 'wh':
+#         box1_x1 = box_preds[..., 0:1]
+#         box1_y1 = box_preds[..., 1:2]
+#         box1_x2 = box_preds[..., 2:3]
+#         box1_y2 = box_preds[..., 3:4]
+# 
+#         box2_x1 = box_labels[..., 0:1]
+#         box2_y1 = box_labels[..., 1:2]
+#         box2_x2 = box_labels[..., 2:3]
+#         box2_y2 = box_labels[..., 3:4]
+# 
+#     x1 = torch.max(box1_x1, box2_x1)
+#     y1 = torch.max(box1_y1, box2_y1)
+#     x2 = torch.min(box2_x2, box2_x2)
+#     y2 = torch.min(box2_y2, box2_y2)
+# 
+#     intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
+#     box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
+#     box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
+# 
+#     return intersection / (box1_area + box2_area - intersection + 1e-6)
 
-    elif mode == 'corners':
-        box1_x1 = box_preds[..., 0:1]
-        box1_y1 = box_preds[..., 1:2]
-        box1_x2 = box_preds[..., 2:3]
-        box1_y2 = box_preds[..., 3:4]
-
-        box2_x1 = box_labels[..., 0:1]
-        box2_y1 = box_labels[..., 1:2]
-        box2_x2 = box_labels[..., 2:3]
-        box2_y2 = box_labels[..., 3:4]
-
-    x1 = torch.max(box1_x1, box2_x1)
-    y1 = torch.max(box1_y1, box2_y1)
-    x2 = torch.min(box2_x2, box2_x2)
-    y2 = torch.min(box2_y2, box2_y2)
-
-    intersection = (x2 - x1).clamp(0) * (y2 - y1).clamp(0)
-    box1_area = abs((box1_x2 - box1_x1) * (box1_y2 - box1_y1))
-    box2_area = abs((box2_x2 - box2_x1) * (box2_y2 - box2_y1))
-
-    return intersection / (box1_area + box2_area - intersection + 1e-6)
-
-def nms(bboxes, iou_threshold, threshold, mode = 'corners'):
+def nms(bboxes, iou_threshold, threshold, mode = 'wh'):
 
     assert type(bboxes) == list
 
